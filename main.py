@@ -48,6 +48,7 @@ def main():
         log.info('Executing stage %s', stage)
         stage()
         if args.quicksave:
+            log.info('Quicksaving as requested')
             conn.space_center.quicksave()
 
     log.info('Program complete')
