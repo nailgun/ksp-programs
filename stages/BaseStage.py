@@ -51,9 +51,12 @@ class BaseStage:
 
     def is_ready_to_decouple(self):
         stage = self.vessel.control.current_stage
-        for resource_name in self.vessel.resources_in_decouple_stage(stage - 1).names:
-            if self.vessel.resources_in_decouple_stage(stage - 1).amount(resource_name) > 0.1:
+        stage_resources = self.vessel.resources_in_decouple_stage(stage - 1)
+
+        for resource_name in stage_resources.names:
+            if stage_resources.amount(resource_name) > 0.1:
                 return False
+
         return True
 
     def decouple_when_ready(self):
