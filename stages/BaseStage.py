@@ -13,6 +13,7 @@ class BaseStage:
         self.log = logging.getLogger(self.__class__.__name__)
         self._streams = []
         self._nodes = []
+        self._drawings = []
         self._executing = False
 
     def __call__(self):
@@ -40,6 +41,14 @@ class BaseStage:
         self._nodes.append(node)
         return node
 
+    def add_drawing(self, drawing):
+        self._drawings.append(drawing)
+        return drawing
+
+    def debug_display_reference_frame(self, reference_frame):
+        for axis in [(1, 0, 0), (0, 1, 0), (0, 0, 1)]:
+            self.add_drawing(self.conn.drawing.add_direction(axis, reference_frame)).color = axis
+
     def _cleanup(self):
         self._reset_auto_pilot()
 
@@ -50,6 +59,10 @@ class BaseStage:
         for node in self._nodes:
             node.remove()
         self._nodes = []
+
+        for drawing in self._drawings:
+            drawing.remove()
+        self._drawings = []
 
     def _reset_auto_pilot(self):
         self.vessel.auto_pilot.disengage()
