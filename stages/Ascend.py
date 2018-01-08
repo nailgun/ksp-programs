@@ -37,8 +37,6 @@ class Ascend(BaseStage):
         self.log.info('Target apoapsis reached')
         self.vessel.control.throttle = 0.0
 
-        self.coast_out(altitude)
-
     def gravity_turn(self, altitude):
         if self.turn_start_altitude < altitude() < self.turn_end_altitude:
             frac = ((altitude() - self.turn_start_altitude) / (self.turn_end_altitude - self.turn_start_altitude))
@@ -50,10 +48,4 @@ class Ascend(BaseStage):
         self.log.info('Approaching target apoapsis')
         self.vessel.control.throttle = 0.25
         while apoapsis() < self.target_altitude:
-            pass
-
-    def coast_out(self, altitude):
-        # Wait until out of atmosphere
-        self.log.info('Coasting out of atmosphere')
-        while altitude() < 70500:
             pass
