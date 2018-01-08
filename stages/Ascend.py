@@ -5,14 +5,14 @@ from .BaseStage import BaseStage
 class Ascend(BaseStage):
     turn_start_altitude = 250
     turn_end_altitude = 45000
-    target_altitude = 150000
+    target_apoapsis = 150000
     full_throttle_portion = 0.9
     finalizing_throttle = 0.25
 
     def execute(self):
         apoapsis = self.add_stream(getattr, self.vessel.orbit, 'apoapsis_altitude')
 
-        if apoapsis() > self.target_altitude:
+        if apoapsis() > self.target_apoapsis:
             self.log.info('Apoapsis is already enough')
             return
 
@@ -24,7 +24,7 @@ class Ascend(BaseStage):
         self.vessel.control.throttle = 1.0
 
         # Main ascent loop
-        full_throttle_max_apoapsis = self.target_altitude * self.full_throttle_portion
+        full_throttle_max_apoapsis = self.target_apoapsis * self.full_throttle_portion
         while apoapsis() < full_throttle_max_apoapsis:
             self.gravity_turn(altitude)
 
@@ -42,5 +42,5 @@ class Ascend(BaseStage):
     def wait_apoapsis(self, apoapsis):
         self.log.info('Approaching target apoapsis')
         self.vessel.control.throttle = self.finalizing_throttle
-        while apoapsis() < self.target_altitude:
+        while apoapsis() < self.target_apoapsis:
             pass
