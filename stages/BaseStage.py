@@ -2,9 +2,10 @@ import logging
 
 
 class BaseStage:
-    def __init__(self, conn, vessel, **options):
+    def __init__(self, conn, vessel, watcher, **options):
         self.conn = conn
         self.vessel = vessel
+        self.watcher = watcher
         self.options = options
 
         for k, v in options.items():
@@ -50,8 +51,7 @@ class BaseStage:
             self.add_drawing(self.conn.drawing.add_direction(axis, reference_frame)).color = axis
 
     def is_ready_to_decouple(self):
-        stage = self.vessel.control.current_stage
-        stage_resources = self.vessel.resources_in_decouple_stage(stage - 1)
+        stage_resources = self.watcher.current_stage_resources()
 
         for resource_name in stage_resources.names:
             if stage_resources.amount(resource_name) > 0.1:
