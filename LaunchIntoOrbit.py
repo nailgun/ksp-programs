@@ -109,6 +109,7 @@ def circularize():
     print('Orientating ship for circularization burn')
     vessel.auto_pilot.reference_frame = node.reference_frame
     vessel.auto_pilot.target_direction = (0, 1, 0)
+    vessel.auto_pilot.engage()
     vessel.auto_pilot.wait()
 
     # Wait until burn
@@ -128,7 +129,7 @@ def circularize():
     print('Fine tuning')
     vessel.control.throttle = 0.05
     remaining_burn = conn.add_stream(node.remaining_burn_vector, node.reference_frame)
-    while remaining_burn()[1] > 0:
+    while remaining_burn()[1] > 5:
         pass
     vessel.control.throttle = 0.0
     node.remove()
