@@ -49,6 +49,18 @@ class BaseStage:
         for axis in [(1, 0, 0), (0, 1, 0), (0, 0, 1)]:
             self.add_drawing(self.conn.drawing.add_direction(axis, reference_frame)).color = axis
 
+    def is_ready_to_decouple(self):
+        stage = self.vessel.control.current_stage
+        for resource_name in self.vessel.resources_in_decouple_stage(stage - 1).names:
+            if self.vessel.resources_in_decouple_stage(stage - 1).amount(resource_name) > 0.1:
+                return False
+        return True
+
+    def decouple_when_ready(self):
+        if self.is_ready_to_decouple():
+            self.log.info('Decouple! No resources left in the stage.')
+            self.vessel.control.activate_next_stage()
+
     def _cleanup(self):
         self._reset_auto_pilot()
 
