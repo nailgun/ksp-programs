@@ -23,7 +23,6 @@ class Ascend(BaseStage):
         full_throttle_max_apoapsis = self.target_altitude * self.full_throttle_portion
         while apoapsis() < full_throttle_max_apoapsis:
             self.gravity_turn(altitude)
-            self.decouple_when_ready()
 
         self.wait_apoapsis(apoapsis)
 

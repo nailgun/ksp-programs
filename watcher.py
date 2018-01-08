@@ -1,3 +1,4 @@
+import logging
 import threading
 
 
@@ -7,6 +8,9 @@ class Watcher(threading.Thread):
 
         self.conn = conn
         self.vessel = vessel
+
+        self.log = logging.getLogger(self.__class__.__name__)
+        self.autodecouple = False
 
         self.altitude = self.conn.add_stream(getattr, self.vessel.flight(), 'mean_altitude')
         self.current_stage = self.conn.add_stream(getattr, self.vessel.control, 'current_stage')
@@ -28,6 +32,26 @@ class Watcher(threading.Thread):
                 if prev_stage != current_stage:
                     self._update_current_stage_resources()
                     prev_stage = current_stage
+
+                self.do_background_jobs()
+
+    def do_background_jobs(self):
+        if self.autodecouple:
+            self.decouple_when_ready()
+
+    def decouple_when_ready(self):
+        if self.is_ready_to_decouple():
+            self.log.info('Decouple! No resources left in the stage.')
+            self.vessel.control.activate_next_stage()
+
+    def is_ready_to_decouple(self):
+        stage_resources = self.current_stage_resources()
+
+        for resource_name in stage_resources.names:
+            if stage_resources.amount(resource_name) > 0.1:
+                return False
+
+        return True
 
     def _update_current_stage_resources(self):
         with self._current_stage_resources_lock:

@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--quicksave', action='store_true')
     parser.add_argument('--quickload', action='store_true')
+    parser.add_argument('--no-autodecouple', action='store_true')
     parser.add_argument('program')
     args = parser.parse_args()
 
@@ -54,6 +55,7 @@ def main():
         if args.quicksave:
             log.info('Quicksaving as requested')
             conn.space_center.quicksave()
+        watcher_thread.autodecouple = not args.no_autodecouple
 
     log.info('Program complete')
 
