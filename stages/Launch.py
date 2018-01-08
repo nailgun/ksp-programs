@@ -4,6 +4,7 @@ from .BaseStage import BaseStage
 
 
 class Launch(BaseStage):
+    autodecouple = False
     countdown = 3
 
     def execute(self):

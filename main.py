@@ -5,6 +5,7 @@ import functools
 
 import krpc
 
+from watcher import Watcher
 from stages.BaseStage import BaseStage
 
 log = logging.getLogger('main')
@@ -19,6 +20,7 @@ def main():
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--quicksave', action='store_true')
     parser.add_argument('--quickload', action='store_true')
+    parser.add_argument('--no-autodecouple', action='store_true')
     parser.add_argument('program')
     args = parser.parse_args()
 
@@ -40,12 +42,16 @@ def main():
 
     vessel = conn.space_center.active_vessel
 
-    program = eval('[{}]'.format(args.program), {}, ProgramLocals(conn, vessel))
-    program = [init_stage(stage) for stage in program]
+    watcher_thread = Watcher(conn, vessel)
+    watcher_thread.start()
 
+    program = eval('[{}]'.format(args.program), {}, ProgramLocals(conn, vessel, watcher_thread))
+    program = [init_stage(stage) for stage in program]
     log.info('Program: %s', program)
+
     for stage in program:
         log.info('Executing stage %s', stage)
+        watcher_thread.autodecouple = stage.autodecouple and not args.no_autodecouple
         stage()
         if args.quicksave:
             log.info('Quicksaving as requested')
@@ -55,15 +61,16 @@ def main():
 
 
 class ProgramLocals:
-    def __init__(self, conn, vessel):
+    def __init__(self, conn, vessel, watcher):
         self.conn = conn
         self.vessel = vessel
+        self.watcher = watcher
 
     def __getitem__(self, key):
         stage_name = key
         stage_module = importlib.import_module('stages.' + stage_name)
         stage_class = getattr(stage_module, stage_name)
-        return functools.partial(stage_class, self.conn, self.vessel)
+        return functools.partial(stage_class, self.conn, self.vessel, self.watcher)
 
 
 def init_stage(stage):
