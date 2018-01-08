@@ -125,7 +125,7 @@ def circularize():
         pass
     print('Executing burn')
     vessel.control.throttle = 1.0
-    time.sleep(burn_time - 0.5)
+    time.sleep(burn_time - 0.1)
     print('Fine tuning')
     vessel.control.throttle = 0.05
     remaining_burn = conn.add_stream(node.remaining_burn_vector, node.reference_frame)
