@@ -8,6 +8,8 @@ class Ascend(BaseStage):
     turn_start_altitude = 250
     turn_end_altitude = 45000
     target_altitude = 150000
+    full_throttle_portion = 0.9
+    finalizing_throttle = 0.25
 
     def execute(self):
         self.vessel.auto_pilot.target_pitch_and_heading(90, 90)
@@ -22,7 +24,8 @@ class Ascend(BaseStage):
 
         # Main ascent loop
         srbs_separated = False
-        while apoapsis() < self.target_altitude * 0.9:
+        full_throttle_max_apoapsis = self.target_altitude * self.full_throttle_portion
+        while apoapsis() < full_throttle_max_apoapsis:
             self.gravity_turn(altitude)
 
             # Separate SRBs when finished
@@ -44,8 +47,7 @@ class Ascend(BaseStage):
             self.vessel.auto_pilot.target_pitch_and_heading(90 - turn_angle, 90)
 
     def wait_apoapsis(self, apoapsis):
-        # Decrease throttle when approaching target apoapsis
         self.log.info('Approaching target apoapsis')
-        self.vessel.control.throttle = 0.25
+        self.vessel.control.throttle = self.finalizing_throttle
         while apoapsis() < self.target_altitude:
             pass
