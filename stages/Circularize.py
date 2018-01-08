@@ -6,6 +6,8 @@ from .BaseStage import BaseStage
 
 class Circularize(BaseStage):
     lead_time = 5
+    fine_tune_time = 0.1
+    fine_tune_throttle = 0.05
 
     def execute(self):
         self.log.info('Planning circularization burn')
@@ -59,12 +61,12 @@ class Circularize(BaseStage):
     def execute_burn(self, burn_time):
         self.log.info('Executing burn')
         self.vessel.control.throttle = 1.0
-        time.sleep(burn_time - 0.1)
+        time.sleep(burn_time - self.fine_tune_time)
 
     def fine_tune(self, node):
         self.log.info('Fine tuning')
 
-        self.vessel.control.throttle = 0.05
+        self.vessel.control.throttle = self.fine_tune_throttle
 
         with self.conn.stream(node.remaining_burn_vector, node.reference_frame) as remaining_burn:
             prev_remaining_burn = remaining_burn()[1]
