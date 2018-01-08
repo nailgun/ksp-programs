@@ -22,16 +22,8 @@ class Ascend(BaseStage):
 
         # Main ascent loop
         srbs_separated = False
-        turn_angle = 0
-        while True:
-            # Gravity turn
-            if altitude() > self.turn_start_altitude and altitude() < self.turn_end_altitude:
-                frac = ((altitude() - self.turn_start_altitude) /
-                        (self.turn_end_altitude - self.turn_start_altitude))
-                new_turn_angle = frac * 90
-                if abs(new_turn_angle - turn_angle) > 0.5:
-                    turn_angle = new_turn_angle
-                    self.vessel.auto_pilot.target_pitch_and_heading(90 - turn_angle, 90)
+        while apoapsis() < self.target_altitude * 0.9:
+            self.gravity_turn(altitude)
 
             # Separate SRBs when finished
             if not srbs_separated:
@@ -40,18 +32,27 @@ class Ascend(BaseStage):
                     srbs_separated = True
                     self.log.info('SRBs separated')
 
-            # Decrease throttle when approaching target apoapsis
-            if apoapsis() > self.target_altitude * 0.9:
-                self.log.info('Approaching target apoapsis')
-                break
+        self.wait_apoapsis(apoapsis)
 
-        # Disable engines when target apoapsis is reached
-        self.vessel.control.throttle = 0.25
-        while apoapsis() < self.target_altitude:
-            pass
         self.log.info('Target apoapsis reached')
         self.vessel.control.throttle = 0.0
 
+        self.coast_out(altitude)
+
+    def gravity_turn(self, altitude):
+        if self.turn_start_altitude < altitude() < self.turn_end_altitude:
+            frac = ((altitude() - self.turn_start_altitude) / (self.turn_end_altitude - self.turn_start_altitude))
+            turn_angle = frac * 90
+            self.vessel.auto_pilot.target_pitch_and_heading(90 - turn_angle, 90)
+
+    def wait_apoapsis(self, apoapsis):
+        # Decrease throttle when approaching target apoapsis
+        self.log.info('Approaching target apoapsis')
+        self.vessel.control.throttle = 0.25
+        while apoapsis() < self.target_altitude:
+            pass
+
+    def coast_out(self, altitude):
         # Wait until out of atmosphere
         self.log.info('Coasting out of atmosphere')
         while altitude() < 70500:
