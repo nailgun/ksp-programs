@@ -1,6 +1,4 @@
-import math
-import time
-
+import math2
 from .BaseStage import BaseStage
 
 
@@ -12,12 +10,13 @@ class Ascend(BaseStage):
     finalizing_throttle = 0.25
 
     def execute(self):
-        self.vessel.auto_pilot.target_pitch_and_heading(90, 90)
+        altitude = self.add_stream(getattr, self.vessel.flight(), 'mean_altitude')
+
+        self.gravity_turn(altitude)
         self.vessel.auto_pilot.engage()
         self.vessel.auto_pilot.wait()
         self.vessel.control.throttle = 1.0
 
-        altitude = self.add_stream(getattr, self.vessel.flight(), 'mean_altitude')
         apoapsis = self.add_stream(getattr, self.vessel.orbit, 'apoapsis_altitude')
         stage_2_resources = self.vessel.resources_in_decouple_stage(stage=2, cumulative=False)
         srb_fuel = self.add_stream(stage_2_resources.amount, 'SolidFuel')
@@ -41,10 +40,10 @@ class Ascend(BaseStage):
         self.vessel.control.throttle = 0.0
 
     def gravity_turn(self, altitude):
-        if self.turn_start_altitude < altitude() < self.turn_end_altitude:
-            frac = ((altitude() - self.turn_start_altitude) / (self.turn_end_altitude - self.turn_start_altitude))
-            turn_angle = frac * 90
-            self.vessel.auto_pilot.target_pitch_and_heading(90 - turn_angle, 90)
+        alt = math2.clamp(self.turn_start_altitude, altitude(), self.turn_end_altitude)
+        frac = (alt - self.turn_start_altitude) / (self.turn_end_altitude - self.turn_start_altitude)
+        turn_angle = frac * 90
+        self.vessel.auto_pilot.target_pitch_and_heading(90 - turn_angle, 90)
 
     def wait_apoapsis(self, apoapsis):
         self.log.info('Approaching target apoapsis')
