@@ -129,8 +129,9 @@ def circularize():
     print('Fine tuning')
     vessel.control.throttle = 0.05
     remaining_burn = conn.add_stream(node.remaining_burn_vector, node.reference_frame)
-    while remaining_burn()[1] > 5:
-        pass
+    prev_remaining_burn = remaining_burn()[1]
+    while remaining_burn()[1] <= prev_remaining_burn:
+        prev_remaining_burn = remaining_burn()[1]
     vessel.control.throttle = 0.0
     node.remove()
 
