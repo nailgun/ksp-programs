@@ -36,6 +36,8 @@ class BaseStage:
         return node
 
     def _cleanup(self):
+        self._reset_auto_pilot()
+
         for stream in self._streams:
             stream.remove()
         self._streams = []
@@ -43,3 +45,9 @@ class BaseStage:
         for node in self._nodes:
             node.remove()
         self._nodes = []
+
+    def _reset_auto_pilot(self):
+        self.vessel.auto_pilot.disengage()
+        self.vessel.auto_pilot.reference_frame = self.vessel.surface_reference_frame
+        self.vessel.auto_pilot.target_pitch_and_heading(0, 0)
+        self.vessel.auto_pilot.target_roll = float('nan')
