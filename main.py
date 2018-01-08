@@ -39,6 +39,7 @@ def main():
     log.info('Program: %s', program)
 
     for stage in program:
+        log.info('Executing stage %s', stage)
         stage()
 
     log.info('Program complete')
