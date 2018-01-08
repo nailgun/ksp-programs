@@ -10,14 +10,18 @@ class Ascend(BaseStage):
     finalizing_throttle = 0.25
 
     def execute(self):
+        apoapsis = self.add_stream(getattr, self.vessel.orbit, 'apoapsis_altitude')
+
+        if apoapsis() > self.target_altitude:
+            self.log.info('Apoapsis is already enough')
+            return
+
         altitude = self.add_stream(getattr, self.vessel.flight(), 'mean_altitude')
 
         self.gravity_turn(altitude)
         self.vessel.auto_pilot.engage()
         self.vessel.auto_pilot.wait()
         self.vessel.control.throttle = 1.0
-
-        apoapsis = self.add_stream(getattr, self.vessel.orbit, 'apoapsis_altitude')
 
         # Main ascent loop
         full_throttle_max_apoapsis = self.target_altitude * self.full_throttle_portion
