@@ -18,21 +18,12 @@ class Ascend(BaseStage):
         self.vessel.control.throttle = 1.0
 
         apoapsis = self.add_stream(getattr, self.vessel.orbit, 'apoapsis_altitude')
-        stage_2_resources = self.vessel.resources_in_decouple_stage(stage=2, cumulative=False)
-        srb_fuel = self.add_stream(stage_2_resources.amount, 'SolidFuel')
 
         # Main ascent loop
-        srbs_separated = False
         full_throttle_max_apoapsis = self.target_altitude * self.full_throttle_portion
         while apoapsis() < full_throttle_max_apoapsis:
             self.gravity_turn(altitude)
-
-            # Separate SRBs when finished
-            if not srbs_separated:
-                if srb_fuel() < 0.1:
-                    self.vessel.control.activate_next_stage()
-                    srbs_separated = True
-                    self.log.info('SRBs separated')
+            self.decouple_when_ready()
 
         self.wait_apoapsis(apoapsis)
 
