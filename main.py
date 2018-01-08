@@ -51,11 +51,11 @@ def main():
 
     for stage in program:
         log.info('Executing stage %s', stage)
+        watcher_thread.autodecouple = stage.autodecouple and not args.no_autodecouple
         stage()
         if args.quicksave:
             log.info('Quicksaving as requested')
             conn.space_center.quicksave()
-        watcher_thread.autodecouple = not args.no_autodecouple
 
     log.info('Program complete')
 

@@ -2,6 +2,8 @@ import logging
 
 
 class BaseStage:
+    autodecouple = True
+
     def __init__(self, conn, vessel, watcher, **options):
         self.conn = conn
         self.vessel = vessel
