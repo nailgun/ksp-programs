@@ -5,6 +5,10 @@ from .BaseStage import BaseStage
 
 class Launch(BaseStage):
     def execute(self):
+        if self.vessel.situation.name not in ('pre_launch', 'landed'):
+            self.log.error('Invalid situation: %s', self.vessel.situation)
+            return
+
         self.vessel.control.throttle = 1.0
 
         # Countdown...
