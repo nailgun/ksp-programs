@@ -17,6 +17,8 @@ def main():
     parser.add_argument('--stream-port', type=int, default=krpc.DEFAULT_STREAM_PORT)
     parser.add_argument('--client-name', default='Program')
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--quicksave', action='store_true')
+    parser.add_argument('--quickload', action='store_true')
     parser.add_argument('program')
     args = parser.parse_args()
 
@@ -31,16 +33,22 @@ def main():
                         rpc_port=args.rpc_port,
                         stream_port=args.stream_port)
     log.info('Connected to %s', args.address)
+
+    if args.quickload:
+        log.info('Loading quicksave as requested')
+        conn.space_center.quickload()
+
     vessel = conn.space_center.active_vessel
 
     program = eval('[{}]'.format(args.program), {}, ProgramLocals(conn, vessel))
     program = [init_stage(stage) for stage in program]
 
     log.info('Program: %s', program)
-
     for stage in program:
         log.info('Executing stage %s', stage)
         stage()
+        if args.quicksave:
+            conn.space_center.quicksave()
 
     log.info('Program complete')
 
