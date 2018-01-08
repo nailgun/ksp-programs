@@ -4,6 +4,8 @@ import importlib
 
 import krpc
 
+log = logging.getLogger('main')
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -19,10 +21,8 @@ def main():
     else:
         log_level = logging.INFO
     logging.basicConfig(level=log_level)
-    log = logging.getLogger('main')
 
     program = ['Launch', 'Ascend', 'Circularize']
-    # program = ['Circularize']
     log.info('Program: %s', ', '.join(program))
 
     conn = krpc.connect(name=args.client_name,
@@ -32,15 +32,18 @@ def main():
     log.info('Connected to %s', args.address)
 
     vessel = conn.space_center.active_vessel
-
-    for stage_name in program:
-        log.info('Executing stage %s', stage_name)
-        stage_module = importlib.import_module('stages.' + stage_name)
-        stage_class = getattr(stage_module, stage_name)
-        stage = stage_class(conn, vessel)
+    stages = [load_stage(stage_name, conn, vessel) for stage_name in program]
+    for stage in stages:
         stage()
 
     log.info('Program complete')
+
+
+def load_stage(stage_name, conn, vessel):
+    log.info('Executing stage %s', stage_name)
+    stage_module = importlib.import_module('stages.' + stage_name)
+    stage_class = getattr(stage_module, stage_name)
+    return stage_class(conn, vessel)
 
 
 if __name__ == '__main__':
