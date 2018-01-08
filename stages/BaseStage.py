@@ -2,9 +2,14 @@ import logging
 
 
 class BaseStage:
-    def __init__(self, conn, vessel):
+    def __init__(self, conn, vessel, **options):
         self.conn = conn
         self.vessel = vessel
+        self.options = options
+
+        for k, v in options.items():
+            setattr(self, k, v)
+
         self.log = logging.getLogger(self.__class__.__name__)
         self._streams = []
         self._nodes = []
@@ -51,3 +56,10 @@ class BaseStage:
         self.vessel.auto_pilot.reference_frame = self.vessel.surface_reference_frame
         self.vessel.auto_pilot.target_pitch_and_heading(0, 0)
         self.vessel.auto_pilot.target_roll = float('nan')
+
+    def __repr__(self):
+        options_repr = ', '.join(['{}={}'.format(k, v) for k, v in self.options.items()])
+        if options_repr:
+            return '{}({})'.format(self.__class__.__name__, options_repr)
+        else:
+            return self.__class__.__name__
