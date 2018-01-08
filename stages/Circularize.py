@@ -51,13 +51,12 @@ class Circularize(BaseStage):
         burn_ut = self.conn.space_center.ut + self.vessel.orbit.time_to_apoapsis - (burn_time / 2.)
         self.conn.space_center.warp_to(burn_ut - self.lead_time)
 
-    def execute_burn(self, burn_time):
-        # Execute burn
         self.log.info('Ready to execute burn')
         with self.conn.stream(getattr, self.vessel.orbit, 'time_to_apoapsis') as time_to_apoapsis:
             while time_to_apoapsis() - (burn_time / 2.) > 0:
                 pass
 
+    def execute_burn(self, burn_time):
         self.log.info('Executing burn')
         self.vessel.control.throttle = 1.0
         time.sleep(burn_time - 0.1)
