@@ -16,7 +16,7 @@ class Circularize(BaseStage):
         burn_time = self.calc_burn_time(delta_v)
 
         self.orientate(node)
-        self.wait_until_burn(burn_time)
+        self.wait_until_burn(node, burn_time)
         self.execute_burn(burn_time)
         self.fine_tune(node)
 
@@ -48,14 +48,13 @@ class Circularize(BaseStage):
         self.vessel.auto_pilot.target_direction = (0, 1, 0)
         self.vessel.auto_pilot.wait()
 
-    def wait_until_burn(self, burn_time):
+    def wait_until_burn(self, node, burn_time):
         self.log.info('Waiting until circularization burn')
-        burn_ut = self.conn.space_center.ut + self.vessel.orbit.time_to_apoapsis - (burn_time / 2.)
-        self.conn.space_center.warp_to(burn_ut - self.lead_time)
+        self.conn.space_center.warp_to(node.ut - self.lead_time - (burn_time / 2.))
 
         self.log.info('Ready to execute burn')
-        with self.conn.stream(getattr, self.vessel.orbit, 'time_to_apoapsis') as time_to_apoapsis:
-            while time_to_apoapsis() - (burn_time / 2.) > 0:
+        with self.conn.stream(getattr, node, 'time_to') as time_to_node:
+            while time_to_node() - (burn_time / 2.) > 0:
                 pass
 
     def execute_burn(self, burn_time):
