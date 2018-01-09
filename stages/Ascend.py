@@ -10,11 +10,21 @@ class Ascend(BaseStage):
     finalizing_throttle = 0.25
 
     def execute(self):
+        self.log.info('Planning ascent from %s', self.vessel.orbit.body.name)
+        if self.vessel.orbit.body.has_atmosphere:
+            self.log.info('Atmosphere depth: %s', self.vessel.orbit.body.atmosphere_depth)
+        else:
+            self.log.info('No atmosphere')
+
+        self.log.info('Target apoapsis: %s', self.target_apoapsis)
+
         apoapsis = self.add_stream(getattr, self.vessel.orbit, 'apoapsis_altitude')
 
         if apoapsis() > self.target_apoapsis:
             self.log.info('Apoapsis is already enough')
             return
+
+        self.log.info('Gravity turn from %s to %s', self.turn_start_altitude, self.turn_end_altitude)
 
         altitude = self.add_stream(getattr, self.vessel.flight(), 'mean_altitude')
 
