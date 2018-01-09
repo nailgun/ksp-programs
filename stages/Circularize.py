@@ -5,7 +5,7 @@ from .NodeManoeuvre import NodeManoeuvre
 
 class Circularize(NodeManoeuvre):
     def execute(self):
-        self.log.info('Planning circularization manoeuvre')
+        self.log.info('Planning circularization manoeuvre around %s', self.vessel.orbit.body.name)
         delta_v = self.calc_delta_v()
         node = self.add_node(self.conn.space_center.ut + self.vessel.orbit.time_to_apoapsis, prograde=delta_v)
         self.perform_manoeuvre(node)
