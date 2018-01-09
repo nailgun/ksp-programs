@@ -1,24 +1,24 @@
 import math
-import time
 
 from .BaseStage import BaseStage
 
 
 class Circularize(BaseStage):
     lead_time = 5
-    fine_tune_time = 0.1
-    fine_tune_throttle = 0.05
+    max_delta_v_error = 0.1
+    burn_slowdown_factor = 8.37
 
     def execute(self):
         self.log.info('Planning circularization burn')
         delta_v = self.calc_delta_v()
+        self.log.info('DeltaV: %s', delta_v)
         node = self.add_node(self.conn.space_center.ut + self.vessel.orbit.time_to_apoapsis, prograde=delta_v)
         burn_time = self.calc_burn_time(delta_v)
+        self.log.info('Burn time: %s', burn_time)
 
         self.orientate(node)
         self.wait_until_burn(node, burn_time)
-        self.execute_burn(burn_time)
-        self.fine_tune(node)
+        self.execute_burn(node, burn_time)
 
     def calc_delta_v(self):
         # vis-viva equation
@@ -57,19 +57,19 @@ class Circularize(BaseStage):
             while time_to_node() - (burn_time / 2.) > 0:
                 pass
 
-    def execute_burn(self, burn_time):
+    def execute_burn(self, node, burn_time):
         self.log.info('Executing burn')
+
+        slowdown_dv = burn_time * self.burn_slowdown_factor
         self.vessel.control.throttle = 1.0
-        time.sleep(burn_time - self.fine_tune_time)
 
-    def fine_tune(self, node):
-        self.log.info('Fine tuning')
+        with self.conn.stream(getattr, node, 'remaining_delta_v') as remaining_delta_v:
+            prev_delta_v = remaining_delta_v()
 
-        self.vessel.control.throttle = self.fine_tune_throttle
+            while self.max_delta_v_error < remaining_delta_v() <= prev_delta_v:
+                prev_delta_v = remaining_delta_v()
 
-        with self.conn.stream(node.remaining_burn_vector, node.reference_frame) as remaining_burn:
-            prev_remaining_burn = remaining_burn()[1]
-            while remaining_burn()[1] <= prev_remaining_burn:
-                prev_remaining_burn = remaining_burn()[1]
+                if remaining_delta_v() < slowdown_dv:
+                    self.vessel.control.throttle = remaining_delta_v() / slowdown_dv
 
         self.vessel.control.throttle = 0.0
