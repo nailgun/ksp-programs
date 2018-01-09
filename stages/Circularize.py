@@ -1,5 +1,6 @@
 import math
 
+import math2
 from .BaseStage import BaseStage
 
 
@@ -61,15 +62,25 @@ class Circularize(BaseStage):
         self.log.info('Executing burn')
 
         slowdown_dv = burn_time * self.burn_slowdown_factor
-        self.vessel.control.throttle = 1.0
 
         with self.conn.stream(getattr, node, 'remaining_delta_v') as remaining_delta_v:
-            prev_delta_v = remaining_delta_v()
+            dv = remaining_delta_v()
+            prev_dv = dv
 
-            while self.max_delta_v_error < remaining_delta_v() <= prev_delta_v:
-                prev_delta_v = remaining_delta_v()
+            while self.max_delta_v_error < dv:
+                if self.quantize_dv(dv) > self.quantize_dv(prev_dv):
+                    self.log.error('Breaking burn due to increasing manoeuvre delta-V')
+                    break
 
-                if remaining_delta_v() < slowdown_dv:
-                    self.vessel.control.throttle = remaining_delta_v() / slowdown_dv
+                prev_dv = dv
+                dv = remaining_delta_v()
+
+                if dv > slowdown_dv:
+                    self.vessel.control.throttle = 1.0
+                else:
+                    self.vessel.control.throttle = dv / slowdown_dv
 
         self.vessel.control.throttle = 0.0
+
+    def quantize_dv(self, dv):
+        return math2.quantize(dv, self.max_delta_v_error)
