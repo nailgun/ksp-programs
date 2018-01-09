@@ -20,17 +20,6 @@ class NodeManoeuvre(BaseStage):
         self.wait_until_burn(node, burn_time)
         self.execute_burn(node, burn_time)
 
-    def calc_delta_v(self):
-        # vis-viva equation
-
-        mu = self.vessel.orbit.body.gravitational_parameter
-        r = self.vessel.orbit.apoapsis
-        a1 = self.vessel.orbit.semi_major_axis
-        a2 = r
-        v1 = math.sqrt(mu * ((2. / r) - (1. / a1)))
-        v2 = math.sqrt(mu * ((2. / r) - (1. / a2)))
-        return v2 - v1
-
     def calc_burn_time(self, delta_v):
         # rocket equation
 
